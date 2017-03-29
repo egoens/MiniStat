@@ -38,23 +38,20 @@ module MiniStat
         data.sort!
         @sorted = true
       end
+
       if data.size % 2 == 0
         return (data[data.size / 2.0 - 1] + data[(data.size / 2.0)]) / 2.0
-      else 
+      else
         return data[(data.size - 1)/2.0]
       end
     end
 
     ##
-    # Partition a set of numbers about +pivot+
-    def partition(pivot, data=@data)
-      low  = []
-      high = []
-      data.each do |i|
-        high.push(i) if i > pivot
-        low.push(i)  if i < pivot
-      end
-      return {:low => low, :high => high}
+    # Partition data set into lower and upper halves
+    def partition(data=@data)
+        low = data.size % 2 == 0 ? data[0..data.size/2] : data[0..(data.size - 2)/2]
+        high = data.size % 2 == 0 ? data[data.size/2..-1] : data[(data.size + 2)/2..-1]
+        return {:low => low, :high => high}
     end
 
     ##
@@ -67,13 +64,13 @@ module MiniStat
     ##
     # First quartile.
     def q1
-      @q1 ||= median(partition(median(@data), @data)[:low])
+      @q1 ||= median(partition(@data)[:low])
     end
 
     ##
     # Third quartile
     def q3
-      @q3 ||= median(partition(median(@data), @data)[:high])
+      @q3 ||= median(partition(@data)[:high])
     end
 
     ##
@@ -85,7 +82,7 @@ module MiniStat
     ##
     # Returns an array of outlying data points.
     def outliers
-      @outliers ||= 
+      @outliers ||=
         @data.map do |i|
           i  if (i < q1 - (1.5 * iqr) or i > q3 + (1.5 * iqr))
         end.compact
@@ -98,7 +95,7 @@ module MiniStat
     end
 
     ##
-    # Computes mode and generates a histogram (for free!). 
+    # Computes mode and generates a histogram (for free!).
     # (We needed it anyway).
     def mode
       @hist     ||= {}
@@ -115,10 +112,10 @@ module MiniStat
     end
 
     ##
-    # Computes variance. Used to measure degree of spread 
+    # Computes variance. Used to measure degree of spread
     # in dataset.
     def variance
-      @variance ||= 
+      @variance ||=
         @data.inject(0) { |i,j| i += (j - mean(@data)) ** 2}  / (@data.size - 1)
     end
 
@@ -137,7 +134,7 @@ module MiniStat
         raise "Geometric mean only applies to non-negative data"
       end
 
-      @geometric_mean ||= 
+      @geometric_mean ||=
         2 ** (mean @data.map { |x| Math.log2(x) })
         # this overflowed for dataset with large numbers
         # (@data.inject(1) {|i,j| i *= j})**(1.0/@data.size)
@@ -172,21 +169,21 @@ module MiniStat
 
     # Return a string with statisical info about a dataset.
     def to_s
-      <<-DATA_STR    
-        Partition:#{partition(median).inspect} 
+      <<-DATA_STR
+        Partition:#{partition(median).inspect}
         Mean:#{mean}
         Geometric Mean:#{geometric_mean}
         Harmonic Mean:#{harmonic_mean}
-        Median:#{median} 
-        Min:#{data.min} 
+        Median:#{median}
+        Min:#{data.min}
         Q1:#{q1}
         Q3:#{q3}
         Max:#{data.max}
         IQR:#{iqr}
         Outliers:#{outliers.inspect}
-        Variance:#{variance} 
+        Variance:#{variance}
         Std Dev:#{std_dev}
       DATA_STR
     end
-  end  
+  end
 end
